@@ -4,6 +4,8 @@ import pickle
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import logging
+from dvclive import Live
+import yaml
 
 # logging configuration
 logger = logging.getLogger('model_evaluation')
@@ -96,6 +98,19 @@ def main():
     except Exception as e:
         logger.error('Failed to complete the model evaluation process: %s', e)
         print(f"Error: {e}")
+
+    with open('params.yaml', 'r') as file:
+        params = yaml.safe_load(file)
+
+    with Live(save_dvc_exp=True) as live:
+        live.log_metric('accuracy', metrics['accuracy'])
+        live.log_metric('precision', metrics['precision'])
+        live.log_metric('recall', metrics['recall'])
+        live.log_metric('auc', metrics['auc'])
+
+        for param,value in params.items():
+            for key, val in value.items():
+                live.log_param(f'{param}_{key}', val)
 
 if __name__ == '__main__':
     main()
